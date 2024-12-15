@@ -13,6 +13,10 @@ class Order extends Model
         'user_id',
         'pickup_address',
         'delivery_address',
+        'pickup_time',
+        'delivery_time',
+        'weight',
+        'size',
         'status',
     ];
 

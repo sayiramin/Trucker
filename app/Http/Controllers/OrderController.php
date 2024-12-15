@@ -12,12 +12,20 @@ class OrderController extends Controller
         $validated = $request->validate([
             'pickup_address' => 'required|string|max:255',
             'delivery_address' => 'required|string|max:255',
+            'pickup_time' => 'required|date',
+            'delivery_time' => 'required|date|after_or_equal:pickup_time',
+            'weight' => 'required|numeric|min:0',
+            'size' => 'required|string|max:255',
         ]);
 
         $order = Order::create([
             'user_id' => Auth::id(),
             'pickup_address' => $validated['pickup_address'],
             'delivery_address' => $validated['delivery_address'],
+            'pickup_time' => $validated['pickup_time'],
+            'delivery_time' => $validated['delivery_time'],
+            'weight' => $validated['weight'],
+            'size' => $validated['size'],
             'status' => 'pending',
         ]);
 
@@ -26,21 +34,30 @@ class OrderController extends Controller
 
     public function index()
     {
-        $orders = Auth::user()->orders; // Assuming a `hasMany` relationship
+        $orders = Auth::user()->orders;
         return response()->json(['orders' => $orders], 200);
     }
 
     public function show($id)
     {
-        // Find the order by ID that belongs to the authenticated user
         $order = Auth::user()->orders()->find($id);
 
-        // If the order doesn't exist or doesn't belong to the user, return an error
         if (!$order) {
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        // Return the order as JSON
         return response()->json(['order' => $order], 200);
+    }
+
+    public function updateStatus(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,delivered',
+        ]);
+
+        $order->status = $request->status;
+        $order->save();
+
+        return redirect()->route('admin.orders.index')->with('success', 'Order status updated successfully.');
     }
 }

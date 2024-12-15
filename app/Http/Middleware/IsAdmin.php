@@ -3,16 +3,23 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class IsAdmin
 {
-    public function handle($request, Closure $next)
+    /**
+     * @param Request $request
+     * @param Closure $next
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && Auth::user()->is_admin) {
+        // Check if the user is authenticated and an admin
+        if (auth()->check() && auth()->user()->is_admin) {
             return $next($request);
         }
 
-        return redirect('/')->with('error', 'Access denied.'); // Redirect non-admins
+        // Redirect if the user is not an admin
+        return redirect()->route('admin.login')->withErrors(['Unauthorized access.']);
     }
 }

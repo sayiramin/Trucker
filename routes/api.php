@@ -7,7 +7,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 
 // Authentication routes
-Route::post('/register', [RegisteredUserController::class, 'store']);
+//Route::post('/register', [RegisteredUserController::class, 'store']);
+Route::post('/register', [AuthenticatedSessionController::class, 'register']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
 // Protected routes (require authentication)

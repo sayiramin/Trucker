@@ -8,7 +8,7 @@
 <form method="POST" action="{{ route('admin.login') }}">
     @csrf
     <div>
-        <label>Email:</label>
+        <label>Emaild:</label>
         <input type="email" name="email" required>
     </div>
     <div>
