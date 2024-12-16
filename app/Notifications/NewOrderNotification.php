@@ -2,31 +2,45 @@
 
 namespace App\Notifications;
 
-use App\Models\Order;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class NewOrderNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public Order $order) {}
+    public $order;
 
-    public function via($notifiable)
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct($order)
     {
-        // Send via email by default; could add Slack or SMS as well
-        return ['mail'];
+        $this->order = $order; // Pass order data
     }
 
-    public function toMail($notifiable)
+    /**
+     * Get the delivery channels.
+     */
+    public function via($notifiable)
     {
-        return (new MailMessage)
-            ->subject('New Order Received')
-            ->line('A new order has been placed by user: ' . $this->order->user->email)
-            ->line('Pickup: ' . $this->order->pickup_address)
-            ->line('Delivery: ' . $this->order->delivery_address)
-            ->action('View Order', url('/admin/orders/' . $this->order->id))
-            ->line('Thank you for using our application!');
+        return ['database'];
+    }
+
+    /**
+     * Get the database representation.
+     */
+    public function toDatabase($notifiable)
+    {
+        return [
+            'order_id' => $this->order->id,
+            'customer_name' => $this->order->user->name,
+            'customer_email' => $this->order->user->email,
+            'order_weight' => $this->order->weight,
+            'pickup_address' => $this->order->pickup_address,
+            'delivery_address' => $this->order->delivery_address,
+            'message' => 'A new order has been placed.'
+        ];
     }
 }

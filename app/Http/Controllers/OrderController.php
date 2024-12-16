@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\User;
+use App\Notifications\NewOrderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +30,11 @@ class OrderController extends Controller
             'size' => $validated['size'],
             'status' => 'pending',
         ]);
+
+        $admins = User::where('is_admin', true)->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewOrderNotification($order));
+        }
 
         return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
     }

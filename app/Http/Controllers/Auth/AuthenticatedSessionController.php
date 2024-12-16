@@ -7,28 +7,39 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 
 class AuthenticatedSessionController extends Controller
 {
     public function store(Request $request)
     {
-        // Validate the login request
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
 
-        // Attempt to authenticate the user
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('API Token')->plainTextToken;
+        try{
+            // Validate the login request
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
 
+            // Attempt to authenticate the user
+            if (Auth::attempt($credentials)) {
+                $user = Auth::user();
+                $token = $user->createToken('API Token')->plainTextToken;
+
+                return response()->json([
+                    'message'   => 'Login successful',
+                    'user'      => $user,
+                    'token'     => $token,
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            // Catch any exception and return a custom error message
             return response()->json([
-                'message'   => 'Login successful',
-                'user'      => $user,
-                'token'     => $token,
-            ], 200);
+                'error' => 'Login failed',
+                'message' => $e->getMessage(),
+            ], 500);
         }
+
 
         // If authentication fails
         return response()->json([
@@ -38,15 +49,15 @@ class AuthenticatedSessionController extends Controller
 
     public function register(Request $request)
     {
-        // Validate the incoming registration request
-//        $validated = $request->validate([
-//            'name' => 'required|string|max:255',
-//            'email' => 'required|string|email|max:255|unique:users',
-//            'phone' => 'required|string|max:15|unique:users',
-//            'password' => 'required|string|min:8|confirmed', // Ensure password confirmation is included
-//        ]);
-//
         try {
+            // Validate the incoming registration request
+            $validated =  $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+                'phone' => ['required', 'string', 'max:15', 'unique:'.User::class],
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
+
             // Create a new user
             $user = User::create([
                 'name' => $request->name,
@@ -72,6 +83,7 @@ class AuthenticatedSessionController extends Controller
             return response()->json([
                 'error' => 'Registration failed, please try again later.',
                 'details' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
